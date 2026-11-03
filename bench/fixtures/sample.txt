@@ -1,0 +1,2 @@
+Benchmarks are only as good as their controls.
+This fixture exists so that file reads measure the filesystem, not the network.

@@ -7,8 +7,14 @@
       "description": "Search the local document index and return up to five matches.",
       "inputs": {
         "type": "object",
-        "properties": {"query": {"type": "string"}},
-        "required": ["query"]
+        "properties": {
+          "query": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "query"
+        ]
       },
       "tool_call_template": {
         "call_template_type": "http",
@@ -21,8 +27,14 @@
       "description": "Compute the SHA-256 digest of a text and return it as hex.",
       "inputs": {
         "type": "object",
-        "properties": {"text": {"type": "string"}},
-        "required": ["text"]
+        "properties": {
+          "text": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "text"
+        ]
       },
       "tool_call_template": {
         "call_template_type": "cli",
@@ -32,6 +44,170 @@
             "append_to_final_output": true
           }
         ]
+      }
+    },
+    {
+      "name": "read_file",
+      "description": "Read a text file from the fixtures directory and return its first 2000 characters.",
+      "inputs": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "path"
+        ]
+      },
+      "tool_call_template": {
+        "call_template_type": "http",
+        "url": "http://127.0.0.1:8765/file",
+        "http_method": "GET"
+      }
+    },
+    {
+      "name": "list_dir",
+      "description": "List the files available in the fixtures directory.",
+      "inputs": {
+        "type": "object",
+        "properties": {},
+        "required": []
+      },
+      "tool_call_template": {
+        "call_template_type": "http",
+        "url": "http://127.0.0.1:8765/ls",
+        "http_method": "GET"
+      }
+    },
+    {
+      "name": "word_count",
+      "description": "Count whitespace-separated words in a text.",
+      "inputs": {
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "text"
+        ]
+      },
+      "tool_call_template": {
+        "call_template_type": "http",
+        "url": "http://127.0.0.1:8765/wc",
+        "http_method": "GET"
+      }
+    },
+    {
+      "name": "sqlite_query",
+      "description": "Read up to N rows from the events table of the local SQLite database.",
+      "inputs": {
+        "type": "object",
+        "properties": {
+          "limit": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "limit"
+        ]
+      },
+      "tool_call_template": {
+        "call_template_type": "http",
+        "url": "http://127.0.0.1:8765/sqlite",
+        "http_method": "GET"
+      }
+    },
+    {
+      "name": "json_filter",
+      "description": "Filter records by an exact field value and return up to five matches.",
+      "inputs": {
+        "type": "object",
+        "properties": {
+          "field": {
+            "type": "string"
+          },
+          "value": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "field",
+          "value"
+        ]
+      },
+      "tool_call_template": {
+        "call_template_type": "http",
+        "url": "http://127.0.0.1:8765/filter",
+        "http_method": "GET"
+      }
+    },
+    {
+      "name": "regex_extract",
+      "description": "Extract up to fifty matches of a regular expression from a text.",
+      "inputs": {
+        "type": "object",
+        "properties": {
+          "pattern": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "pattern",
+          "text"
+        ]
+      },
+      "tool_call_template": {
+        "call_template_type": "http",
+        "url": "http://127.0.0.1:8765/regex",
+        "http_method": "GET"
+      }
+    },
+    {
+      "name": "echo_json",
+      "description": "Send a JSON object and receive it back with its top-level keys.",
+      "inputs": {
+        "type": "object",
+        "properties": {
+          "payload": {
+            "type": "object"
+          }
+        },
+        "required": [
+          "payload"
+        ]
+      },
+      "tool_call_template": {
+        "call_template_type": "http",
+        "url": "http://127.0.0.1:8765/echo",
+        "http_method": "POST",
+        "body_field": "payload",
+        "content_type": "application/json"
+      }
+    },
+    {
+      "name": "slow_task",
+      "description": "Wait for the requested number of milliseconds and confirm the delay.",
+      "inputs": {
+        "type": "object",
+        "properties": {
+          "ms": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "ms"
+        ]
+      },
+      "tool_call_template": {
+        "call_template_type": "http",
+        "url": "http://127.0.0.1:8765/slow",
+        "http_method": "GET"
       }
     }
   ]

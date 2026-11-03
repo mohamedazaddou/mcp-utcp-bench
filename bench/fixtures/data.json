@@ -1,0 +1,7 @@
+[
+  {"id": 1, "team": "core", "score": 7},
+  {"id": 2, "team": "platform", "score": 14},
+  {"id": 3, "team": "security", "score": 21},
+  {"id": 4, "team": "core", "score": 28},
+  {"id": 5, "team": "platform", "score": 35}
+]

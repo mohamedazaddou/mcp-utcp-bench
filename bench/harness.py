@@ -32,6 +32,14 @@ DISCOVERY_RUNS = 5
 CALLS_SPEC = [
     ("search_docs", {"query": "agent"}),
     ("sha256_text", {"text": "benchmark"}),
+    ("read_file", {"path": "sample.txt"}),
+    ("list_dir", {}),
+    ("word_count", {"text": "one two three four five"}),
+    ("sqlite_query", {"limit": 10}),
+    ("json_filter", {"field": "team", "value": "core"}),
+    ("regex_extract", {"pattern": r"\w+", "text": "alpha beta gamma"}),
+    ("echo_json", {"payload": {"a": 1, "b": [1, 2, 3]}}),
+    ("slow_task", {"ms": 50}),
 ]
 
 logging.getLogger("utcp").setLevel(logging.CRITICAL)
@@ -171,7 +179,8 @@ async def main() -> None:
                      "value": len(json.dumps(data["schema"], ensure_ascii=False).encode())})
 
     with (out / "raw.csv").open("w", newline="", encoding="utf-8") as fh:
-        writer = csv.DictWriter(fh, fieldnames=["impl", "tool", "metric", "value"])
+        writer = csv.DictWriter(fh, fieldnames=["impl", "tool", "metric", "value"],
+                                lineterminator="\n")
         writer.writeheader()
         writer.writerows(rows)
 
