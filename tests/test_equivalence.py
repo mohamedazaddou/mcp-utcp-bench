@@ -1,6 +1,9 @@
 """Both implementations must return the same thing for the same input.
 
-A benchmark that measures two different behaviours is not a benchmark.
+A benchmark that measures two different behaviours is not a benchmark. These
+tests exist because two silent measurement errors were caught by them: a CLI
+placeholder that was never substituted, and a query parameter sent under the
+wrong name.
 """
 from __future__ import annotations
 
@@ -29,14 +32,38 @@ UTCP_CFG = {"manual_call_templates": [{
     "allowed_communication_protocols": ["http", "cli"],
 }]}
 
+# tool -> arguments, shared with the harness so both stay in sync
+CASES = {
+    "search_docs": {"query": "agent"},
+    "sha256_text": {"text": "benchmark"},
+    "read_file": {"path": "sample.txt"},
+    "list_dir": {},
+    "word_count": {"text": "one two three four five"},
+    "sqlite_query": {"limit": 10},
+    "json_filter": {"field": "team", "value": "core"},
+    "regex_extract": {"pattern": r"\w+", "text": "alpha beta gamma"},
+    "echo_json": {"payload": {"a": 1, "b": [1, 2, 3]}},
+    "slow_task": {"ms": 10},
+}
+
 
 @pytest.fixture(scope="module")
 def api():
     proc = subprocess.Popen([sys.executable, str(ROOT / "bench" / "tools" / "api_server.py"), str(PORT)],
                             stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    time.sleep(0.6)
+    time.sleep(1.0)
     yield API
     proc.terminate()
+
+
+def _normalise(value):
+    """Both clients may hand back a JSON string or an already-parsed object."""
+    if isinstance(value, str):
+        try:
+            return json.loads(value)
+        except json.JSONDecodeError:
+            return value.strip()
+    return value
 
 
 async def _via_mcp(tool: str, args: dict):
@@ -45,7 +72,7 @@ async def _via_mcp(tool: str, args: dict):
         async with ClientSession(read, write) as session:
             await session.initialize()
             result = await session.call_tool(tool, args)
-            return json.loads(result.content[0].text) if tool == "search_docs" else result.content[0].text
+            return _normalise(result.content[0].text)
 
 
 async def _via_utcp(tool: str, args: dict):
@@ -55,21 +82,17 @@ async def _via_utcp(tool: str, args: dict):
         out = await client.call_tool(f"local.{tool}", args)
     finally:
         await client.close()
-    return out if isinstance(out, dict) else json.loads(out) if tool == "search_docs" else str(out).strip()
+    return _normalise(out)
 
 
-def test_search_docs_equivalence(api):
-    mcp = asyncio.run(_via_mcp("search_docs", {"query": "agent"}))
-    utcp = asyncio.run(_via_utcp("search_docs", {"query": "agent"}))
-    assert mcp["count"] == utcp["count"]
-    assert [r["id"] for r in mcp["results"]] == [r["id"] for r in utcp["results"]]
-
-
-def test_sha256_equivalence(api):
-    mcp = asyncio.run(_via_mcp("sha256_text", {"text": "benchmark"}))
-    utcp = asyncio.run(_via_utcp("sha256_text", {"text": "benchmark"}))
-    assert utcp in mcp or mcp in utcp
+@pytest.mark.parametrize("tool", sorted(CASES))
+def test_implementations_agree(api, tool):
+    args = CASES[tool]
+    mcp = asyncio.run(_via_mcp(tool, args))
+    utcp = asyncio.run(_via_utcp(tool, args))
+    assert mcp == utcp, f"{tool}: MCP={mcp!r} UTCP={utcp!r}"
 
 
 def test_manual_is_valid_json():
-    json.loads((ROOT / "bench" / "manuals" / "tools.json").read_text(encoding="utf-8"))
+    manual = json.loads((ROOT / "bench" / "manuals" / "tools.json").read_text(encoding="utf-8"))
+    assert len(manual["tools"]) == len(CASES)
