@@ -20,27 +20,27 @@ Raw data in [`results/raw.csv`](results/raw.csv), table in
 
 | tool | MCP p50 / p95 | UTCP p50 / p95 |
 |---|---|---|
-| `search_docs` (HTTP GET) | 2.59 / 2.70 ms | 1.09 / 1.15 ms |
-| `read_file` (filesystem) | 2.77 / 2.87 ms | 1.13 / 1.17 ms |
-| `list_dir` (filesystem) | 2.68 / 2.79 ms | 1.08 / 1.12 ms |
-| `word_count` (compute) | 2.61 / 2.77 ms | 0.99 / 1.03 ms |
-| `sqlite_query` (SQLite) | 3.12 / 3.20 ms | 1.32 / 1.34 ms |
-| `json_filter` (compute) | 2.72 / 2.83 ms | 1.02 / 1.08 ms |
-| `regex_extract` (compute) | 2.72 / 2.81 ms | 1.01 / 1.11 ms |
-| `echo_json` (HTTP POST) | 2.73 / 2.81 ms | 1.01 / 1.07 ms |
-| `slow_task` (50 ms server-side) | 58.64 / 58.86 ms | 54.17 / 54.41 ms |
-| `sha256_text` (subprocess) | 19.49 / 20.09 ms | 21.75 / 22.50 ms |
+| `search_docs` (HTTP GET) | 2.67 / 2.75 ms | 1.08 / 1.12 ms |
+| `read_file` (filesystem) | 2.69 / 2.83 ms | 1.12 / 1.17 ms |
+| `list_dir` (filesystem) | 2.64 / 2.95 ms | 1.04 / 1.08 ms |
+| `word_count` (compute) | 2.93 / 3.03 ms | 0.98 / 1.02 ms |
+| `sqlite_query` (SQLite) | 3.45 / 3.54 ms | 1.31 / 1.33 ms |
+| `json_filter` (compute) | 3.00 / 3.06 ms | 1.00 / 1.07 ms |
+| `regex_extract` (compute) | 2.99 / 3.06 ms | 1.01 / 1.10 ms |
+| `echo_json` (HTTP POST) | 3.00 / 3.06 ms | 0.99 / 1.03 ms |
+| `slow_task` (50 ms server-side) | 58.48 / 58.75 ms | 54.19 / 54.38 ms |
+| `sha256_text` (subprocess) | 19.57 / 22.94 ms | 21.73 / 22.51 ms |
 
 | aggregate | MCP | UTCP |
 |---|---|---|
-| discovery, process start included | 906 ms | 2.3 ms |
-| re-discovery at runtime, p50 | 1.60 ms | 0.48 ms |
+| discovery, process start included | 930 ms | 2.3 ms |
+| re-discovery at runtime, p50 | 1.53 ms | 0.48 ms |
 | tool schema, minimal | 693 tokens | 545 tokens |
 
 ### What the numbers actually say
 
 **Per-call overhead is small, and it is not where the debate says it is.** On the
-eight tools that delegate to the same local service, MCP adds **1.5 to 1.8 ms** over
+eight tools that delegate to the same local service, MCP adds **1.6 to 2.1 ms** over
 UTCP. That is the price of a JSON-RPC round trip through a second process. Anyone
 claiming MCP is "orders of magnitude slower" is measuring something else — probably
 a network call, or their own HTTP client (see pitfall 5).
@@ -51,9 +51,9 @@ costs more than the JSON-RPC hop. `slow_task` shows the same pattern at a larger
 scale, with 4.5 ms of overhead on a 50 ms tool. Optimizing the transport of a call
 whose cost is elsewhere buys nothing.
 
-**Discovery is a start-up cost, not a protocol cost.** 906 ms is a Python
-interpreter starting the MCP server; the handshake itself is the 1.60 ms line. A
-long-lived session amortizes the former to zero. Quoting 906 ms as "MCP overhead"
+**Discovery is a start-up cost, not a protocol cost.** 930 ms is a Python
+interpreter starting the MCP server; the handshake itself is the 1.53 ms line. A
+long-lived session amortizes the former to zero. Quoting 930 ms as "MCP overhead"
 would be dishonest, and it is the most misused number in this space.
 
 **MCP carries more context here: 693 against 545 tokens.** The MCP SDK emits

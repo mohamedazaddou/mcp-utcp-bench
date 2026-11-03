@@ -70,7 +70,7 @@ async def measure_mcp() -> dict:
         "allowed_communication_protocols": ["http", "cli"],
     }]}
 
-    # --- découverte : démarrage du processus + handshake + list_tools
+    # --- discovery: process start + handshake + list_tools
     discovery = []
     schema = None
     for _ in range(DISCOVERY_RUNS):
@@ -82,10 +82,10 @@ async def measure_mcp() -> dict:
         discovery.append((time.perf_counter() - t0) * 1000)
         schema = [t.model_dump(include={"name", "description", "input_schema"}) for t in listed.tools]
 
-    # --- coût d'un list_tools à chaud (aller-retour protocole seul)
+    # --- cost of a warm list_tools (protocol round trip only)
     warm_handshake = []
 
-    # --- appels
+    # --- calls
     latencies = {name: [] for name, _ in CALLS_SPEC}
     async with stdio_client(params) as (read, write):
         async with ClientSession(read, write) as session:
@@ -188,15 +188,15 @@ async def main() -> None:
     lines = ["| metric | MCP | UTCP |", "|---|---|---|"]
     def fmt(vals):
         return f"{pct(vals, .5):.2f} / {pct(vals, .95):.2f} ms (n={len(vals)})"
-    lines.append(f"| discovery, processus inclus (median) | {statistics.median(mcp['discovery_ms']):.1f} ms | {statistics.median(utcp['discovery_ms']):.1f} ms |")
+    lines.append(f"| discovery, process start included (median) | {statistics.median(mcp['discovery_ms']):.1f} ms | {statistics.median(utcp['discovery_ms']):.1f} ms |")
     if mcp["warm_handshake_ms"]:
-        lines.append(f"| redécouverte à chaud, p50 (n=50) | {pct(mcp['warm_handshake_ms'], .5):.2f} ms | {pct(utcp['warm_handshake_ms'], .5):.2f} ms |")
+        lines.append(f"| re-discovery at runtime, p50 (n=50) | {pct(mcp['warm_handshake_ms'], .5):.2f} ms | {pct(utcp['warm_handshake_ms'], .5):.2f} ms |")
     for name, _ in CALLS_SPEC:
         lines.append(f"| call `{name}` p50/p95 | {fmt(mcp['latency_ms'][name])} | {fmt(utcp['latency_ms'][name])} |")
     mcp_min = [{"name": t["name"], "description": t["description"], "inputs": t.get("inputs") or t.get("input_schema")} for t in mcp["schema"]]
     utcp_min = [{"name": t["name"], "description": t["description"], "inputs": t.get("inputs") or t.get("input_schema")} for t in utcp["schema"]]
-    lines.append(f"| schéma minimal (tokens) | {tokens(mcp_min)} | {tokens(utcp_min)} |")
-    lines.append(f"| schéma complet côté client (tokens) | {tokens(mcp['schema'])} | {tokens(utcp['schema'])} |")
+    lines.append(f"| tool schema, minimal (tokens) | {tokens(mcp_min)} | {tokens(utcp_min)} |")
+    lines.append(f"| tool schema, full client-side (tokens) | {tokens(mcp['schema'])} | {tokens(utcp['schema'])} |")
     print("\n".join(lines))
     (out / "summary.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
 
