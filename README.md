@@ -25,7 +25,7 @@ n=100 calls per tool after 10 warm-up calls, 50 re-discovery calls, 5 discovery 
 | tool schema, minimal (tokens) | 138 | 110 |
 | tool schema, full client-side (tokens) | 140 | 110 |
 
-Raw data: [`results/raw.csv`](results/raw.csv). Regenerate with `make bench`.
+Raw data: [`results/raw.csv`](results/raw.csv) (regenerated locally, not committed).
 
 ### What the numbers actually say
 
@@ -105,8 +105,11 @@ Recorded because they are the difference between a plausible number and a true o
 ```bash
 python3 -m venv .venv && . .venv/bin/activate
 pip install -r requirements.txt
-make test     # equivalence between implementations
-make bench    # writes results/raw.csv and results/summary.md
+
+python -m pytest -q tests/     # both implementations must agree
+python bench/harness.py        # writes results/raw.csv and results/summary.md
 ```
+
+`make test` and `make bench` do the same thing where `make` is available.
 
 MIT licensed.
