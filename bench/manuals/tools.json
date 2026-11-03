@@ -1,0 +1,38 @@
+{
+  "utcp_version": "1.0.1",
+  "manual_version": "1.0.0",
+  "tools": [
+    {
+      "name": "search_docs",
+      "description": "Search the local document index and return up to five matches.",
+      "inputs": {
+        "type": "object",
+        "properties": {"query": {"type": "string"}},
+        "required": ["query"]
+      },
+      "tool_call_template": {
+        "call_template_type": "http",
+        "url": "http://127.0.0.1:8765/search",
+        "http_method": "GET"
+      }
+    },
+    {
+      "name": "sha256_text",
+      "description": "Compute the SHA-256 digest of a text and return it as hex.",
+      "inputs": {
+        "type": "object",
+        "properties": {"text": {"type": "string"}},
+        "required": ["text"]
+      },
+      "tool_call_template": {
+        "call_template_type": "cli",
+        "commands": [
+          {
+            "command": "python3 bench/tools/cli_tool.py UTCP_ARG_text_UTCP_END",
+            "append_to_final_output": true
+          }
+        ]
+      }
+    }
+  ]
+}

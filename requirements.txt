@@ -1,0 +1,7 @@
+mcp>=2.3
+utcp>=1.2
+utcp-http>=1.2
+utcp-cli>=1.2
+httpx>=0.27
+tiktoken>=0.8
+pytest>=8
